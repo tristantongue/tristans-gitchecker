@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}
+Repos by size - Tristan Tongue
+{% endblock title %}
+
+
+{% block content %}
+<h1>Repos By Size</h1>
+<embed type="image/svg+xml" src="{{ rendered_chart_svg_as_datauri|safe }}" />
+
+{% endblock content %}

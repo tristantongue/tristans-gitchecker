@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load bootstrap4 %}
+
+{% block title %}
+Repo Languages - Tristan Tongue
+{% endblock title %}
+
+
+{% block content %}
+<h1>Languages Used</h1>
+<form method="GET">
+    {% bootstrap_form form %}
+    {% buttons %}
+        <button type="submit" class="btn btn-primary">Submit</button>
+    {% endbuttons %}
+</form>
+
+<embed type="image/svg+xml" src="{{ rendered_chart_svg_as_datauri|safe }}" />
+
+{% endblock content %}

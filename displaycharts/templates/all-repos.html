@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}
+All Repos - Tristan Tongue
+{% endblock title %}
+
+
+{% block content %}
+<h1>All repos</h1>
+<table class="table mt-5">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Size</th>
+            <th>Language</th>
+            <th>View Repo</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for repo_dict in github_repos %}
+        <tr>
+            <td>{{ repo_dict.name }}</td>
+            <td>{{ repo_dict.size }}</td>
+            <td>{{ repo_dict.language }}</td>
+            <td><a href="{{ repo_dict.html_url }}">View</a></td>
+        </tr>
+        {% endfor %} 
+    </tbody>
+            
+</table> 
+
+{% endblock content %}

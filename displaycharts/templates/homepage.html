@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}
+Home - Tristan Tongue
+{% endblock title %}
+
+
+{% block content %}
+<h1>Welcome!</h1>
+    <div class="p-5 m-5 shadow">
+        <p>Repository Information:</p>
+
+        <a class="btn btn-lg btn-secondary" href="/all-repos/">List of all repos</a>
+        <a class="btn btn-lg btn-secondary" href="/by-size/">Repos graphed by size</a>
+        <a class="btn btn-lg btn-secondary" href="/by-language/">Look up languages used</a>
+    </div>
+<table> <!-- TODO: add django for loop here... --> </table> 
+
+{% endblock content %}

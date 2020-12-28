@@ -3,12 +3,15 @@ from django import forms
 import requests
 from .models import Repo
 import pygal
+from .utils import create_pie
 
 
 class languageform(forms.Form):
-    user = forms.CharField(max_length=100)
-    repo = forms.CharField(max_length=100)
+    user = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'placeholder': 'To find a breakdown of a specific repo first enter a GitHub user here:'}))
+    repo = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'placeholder': '...and then the name of the repo here!'}))
 
+class all_repos_form(forms.Form):
+    user = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'placeholder': 'Search for a GitHub user! Try a big company!'}))
 
 def homepage(request):
     context = {}
@@ -16,35 +19,59 @@ def homepage(request):
 
 
 def all_repos(request):
-    response = requests.get("https://api.github.com/users/tristantongue/repos")
-    full_list = response.json()
+
+    form = all_repos_form(request.GET)
+    if form.is_valid():
+        try:
+            user = form.cleaned_data['user']
+            response = requests.get("https://api.github.com/users/%s/repos" % (user))
+            full_list = response.json()
+        except TypeError:
+            context = {
+                "form": form,
+                "github_repos": full_list,
+            }
+            return render(request, 'all-repos.html', context)
+    else:
+        response = requests.get("https://api.github.com/users/tristantongue/repos")
+        full_list = response.json()
+        form = all_repos_form()
+
     context = {
+        "form": form,
         "github_repos": full_list,
     }
     return render(request, 'all-repos.html', context)
 
 
 def by_size(request):
-    response = requests.get("https://api.github.com/users/tristantongue/repos")
-    full_list = response.json()
-    graph = pygal.HorizontalBar()
-    graph.title = 'Repos by Size'
+    form = all_repos_form(request.GET)
+    if form.is_valid():
+        user = form.cleaned_data['user']
+        response = requests.get("https://api.github.com/users/%s/repos" % (user))
+        full_list = response.json()
+        graph = pygal.HorizontalBar()
+        graph.title = 'Repos by Size'
 
-    for repo in full_list:
-        label = repo["name"]
-        value = repo["size"]
-        graph.add(label, value)
+        for repo in full_list:
+            label = repo["name"]
+            value = repo["size"]
+            graph.add(label, value)
 
-    chart_svg_as_datauri = graph.render_data_uri()
+        chart_svg_as_datauri = graph.render_data_uri()
+    else:
+        chart_svg_as_datauri = ""
+        form = all_repos_form()
+
 
     context = {
+        "form": form,
         "rendered_chart_svg_as_datauri": chart_svg_as_datauri,
     }
     return render(request, 'by-size.html', context)
 
 
 def languages(request):
-    
 
     form = languageform(request.GET)
     if form.is_valid():
@@ -58,13 +85,7 @@ def languages(request):
             chart.add(key, language_list[key])
         chart_svg_as_datauri = chart.render_data_uri()
     else:
-        response = requests.get("https://api.github.com/repos/tristantongue/cowebsite/languages")
-        language_list = response.json()
-        chart = pygal.Pie()
-        chart.title = "Breakdown of cowebsite by language"
-        for key in language_list:
-            chart.add(key, language_list[key])
-        chart_svg_as_datauri = chart.render_data_uri()
+        chart_svg_as_datauri = ""
         form = languageform()
 
 

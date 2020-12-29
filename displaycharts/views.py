@@ -13,6 +13,29 @@ class languageform(forms.Form):
 class all_repos_form(forms.Form):
     user = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'placeholder': 'Search for a GitHub user! Try a big company!'}))
 
+def create_bar(user):
+    response = requests.get("https://api.github.com/users/%s/repos" % (user))
+    full_list = response.json()
+    graph = pygal.HorizontalBar()
+    graph.title = '%s Repos by Size' % (user)
+    for repo in full_list:
+        label = repo["name"]
+        value = repo["size"]
+        graph.add(label, value)
+    chart_svg_as_datauri = graph.render_data_uri()
+    return chart_svg_as_datauri
+
+def create_pie(user, repo):
+    print('creating pie chart')
+    response = requests.get("https://api.github.com/repos/%s/%s/languages" % (user, repo))
+    language_list = response.json()
+    chart = pygal.Pie()
+    chart.title = "Breakdown of %s by language" % (repo)
+    for key in language_list:
+        chart.add(key, language_list[key])
+    chart_svg_as_datauri = chart.render_data_uri()
+    return chart_svg_as_datauri
+
 def homepage(request):
     context = {}
     return render(request, 'homepage.html', context)
@@ -45,24 +68,14 @@ def all_repos(request):
 
 
 def by_size(request):
+    
     form = all_repos_form(request.GET)
     if form.is_valid():
         user = form.cleaned_data['user']
-        response = requests.get("https://api.github.com/users/%s/repos" % (user))
-        full_list = response.json()
-        graph = pygal.HorizontalBar()
-        graph.title = 'Repos by Size'
-
-        for repo in full_list:
-            label = repo["name"]
-            value = repo["size"]
-            graph.add(label, value)
-
-        chart_svg_as_datauri = graph.render_data_uri()
+        chart_svg_as_datauri = create_bar(user)
     else:
         chart_svg_as_datauri = ""
         form = all_repos_form()
-
 
     context = {
         "form": form,
@@ -71,23 +84,17 @@ def by_size(request):
     return render(request, 'by-size.html', context)
 
 
+
 def languages(request):
 
     form = languageform(request.GET)
     if form.is_valid():
         user = form.cleaned_data['user']
         repo = form.cleaned_data['repo']
-        response = requests.get("https://api.github.com/repos/%s/%s/languages" % (user, repo))
-        language_list = response.json()
-        chart = pygal.Pie()
-        chart.title = "Breakdown of %s by language" % (repo)
-        for key in language_list:
-            chart.add(key, language_list[key])
-        chart_svg_as_datauri = chart.render_data_uri()
+        chart_svg_as_datauri = create_pie(user, repo)
     else:
         chart_svg_as_datauri = ""
         form = languageform()
-
 
     context = {
         'form': form,
